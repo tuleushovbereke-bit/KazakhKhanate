@@ -5,9 +5,9 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/LocalPlayer.h"
+#include "Engine/Engine.h"
 #include "TimerManager.h"
 
-// NEW
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
@@ -31,16 +31,14 @@ AMyCharacter::AMyCharacter()
     CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
     CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName);
     CameraComponent->bUsePawnControlRotation = false;
-
-    IsAttacking = false;
-    IsBlocking = false;
 }
 
 void AMyCharacter::BeginPlay()
 {
     Super::BeginPlay();
 
-    // NEW: подключаем Mapping Context в подсистему локального игрока
+    Stamina = MaxStamina;
+
     if (APlayerController* PC = Cast<APlayerController>(GetController()))
     {
         if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
@@ -54,21 +52,32 @@ void AMyCharacter::BeginPlay()
 void AMyCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+
+    // NEW: стамина восстанавливаетс€ только в покое
+    if (CombatState == ECombatState::Idle)
+    {
+        Stamina = FMath::Clamp(Stamina + StaminaRegenPerSecond * DeltaTime, 0.f, MaxStamina);
+    }
+
+    DrawDebugState();
 }
 
 void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    // NEW: прив€зка действий
     if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(PlayerInputComponent))
     {
         EIC->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyCharacter::Move);
         EIC->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMyCharacter::Look);
+
+        // NEW: атака Ч один раз при нажатии; блок Ч держим, пока нажата
+        EIC->BindAction(AttackAction, ETriggerEvent::Started, this, &AMyCharacter::Attack);
+        EIC->BindAction(BlockAction, ETriggerEvent::Started, this, &AMyCharacter::Block);
+        EIC->BindAction(BlockAction, ETriggerEvent::Completed, this, &AMyCharacter::StopBlock);
     }
 }
 
-// NEW
 void AMyCharacter::Move(const FInputActionValue& Value)
 {
     const FVector2D Input = Value.Get<FVector2D>();
@@ -86,7 +95,6 @@ void AMyCharacter::Move(const FInputActionValue& Value)
     AddMovementInput(RightDir, Input.X);
 }
 
-// NEW
 void AMyCharacter::Look(const FInputActionValue& Value)
 {
     const FVector2D Axis = Value.Get<FVector2D>();
@@ -97,31 +105,55 @@ void AMyCharacter::Look(const FInputActionValue& Value)
 
 void AMyCharacter::Attack()
 {
-    if (IsAttacking || IsBlocking)
+    // Ѕить можно только из поко€ и только если хватает стамины
+    if (CombatState != ECombatState::Idle || Stamina < AttackStaminaCost)
     {
         return;
     }
 
-    IsAttacking = true;
-    GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &AMyCharacter::StopAttack, 0.5f, false);
+    CombatState = ECombatState::Attacking;
+    Stamina -= AttackStaminaCost;
+
+    GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &AMyCharacter::StopAttack, AttackDuration, false);
 }
 
 void AMyCharacter::StopAttack()
 {
-    IsAttacking = false;
+    if (CombatState == ECombatState::Attacking)
+    {
+        CombatState = ECombatState::Idle;
+    }
 }
 
 void AMyCharacter::Block()
 {
-    if (IsAttacking)
+    // Ѕлок нельз€ поставить посреди удара
+    if (CombatState != ECombatState::Idle)
     {
         return;
     }
 
-    IsBlocking = true;
+    CombatState = ECombatState::Blocking;
 }
 
 void AMyCharacter::StopBlock()
 {
-    IsBlocking = false;
+    if (CombatState == ECombatState::Blocking)
+    {
+        CombatState = ECombatState::Idle;
+    }
+}
+
+void AMyCharacter::DrawDebugState() const
+{
+    if (GEngine == nullptr)
+    {
+        return;
+    }
+
+    const FString StateName = UEnum::GetDisplayValueAsText(CombatState).ToString();
+    const FString Msg = FString::Printf(TEXT("State: %s   Stamina: %.0f / %.0f"), *StateName, Stamina, MaxStamina);
+
+    //  люч 1 Ч сообщение с этим ключом перезаписываетс€, а не копитс€
+    GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::Yellow, Msg);
 }
