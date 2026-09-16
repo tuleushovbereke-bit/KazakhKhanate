@@ -39,6 +39,7 @@ void AMyCharacter::BeginPlay()
     Super::BeginPlay();
 
     Stamina = MaxStamina;
+    DefaultWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 
     if (APlayerController* PC = Cast<APlayerController>(GetController()))
     {
@@ -85,6 +86,7 @@ void AMyCharacter::Move(const FInputActionValue& Value)
     {
         return;
     }
+
     const FVector2D Input = Value.Get<FVector2D>();
 
     if (Controller == nullptr)
@@ -134,17 +136,18 @@ void AMyCharacter::StopAttack()
     {
         CombatState = ECombatState::Idle;
     }
+    bHitWindowOpen = false;   // страховка: если монтаж прервали, окно не должно остатьс€ открытым
 }
 
 void AMyCharacter::Block()
 {
-    // Ѕлок нельз€ поставить посреди удара
     if (CombatState != ECombatState::Idle)
     {
         return;
     }
 
     CombatState = ECombatState::Blocking;
+    GetCharacterMovement()->MaxWalkSpeed = BlockWalkSpeed;
 }
 
 void AMyCharacter::StopBlock()
@@ -153,6 +156,7 @@ void AMyCharacter::StopBlock()
     {
         CombatState = ECombatState::Idle;
     }
+    GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
 }
 
 void AMyCharacter::DrawDebugState() const
@@ -163,8 +167,14 @@ void AMyCharacter::DrawDebugState() const
     }
 
     const FString StateName = UEnum::GetDisplayValueAsText(CombatState).ToString();
-    const FString Msg = FString::Printf(TEXT("State: %s   Stamina: %.0f / %.0f"), *StateName, Stamina, MaxStamina);
+    const FString Msg = FString::Printf(TEXT("State: %s   Stamina: %.0f / %.0f   HitWindow: %s"),
+        *StateName, Stamina, MaxStamina, bHitWindowOpen ? TEXT("OPEN") : TEXT("-"));
 
     //  люч 1 Ч сообщение с этим ключом перезаписываетс€, а не копитс€
     GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::Yellow, Msg);
+}
+
+void AMyCharacter::SetHitWindowOpen(bool bOpen)
+{
+    bHitWindowOpen = bOpen;
 }

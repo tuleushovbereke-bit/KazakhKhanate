@@ -21,3 +21,7 @@ AM_Attack_01 из шаблонного MM_Attack_01 играет по ЛКМ ч�
 длительность Attacking = длина монтажа. Движение заперто во время удара.
 Root motion в удаче оставили (выпад вперёд — souls-стиль). Live Coding (Ctrl+Alt+F11) для .cpp работает.
 Добавил commit.bat.
+
+## 2026-09-16 (вечер)
+AnimNotifyState_HitWindow в Public/Private. Ловушка: #include должен быть
+AnimNotifyState_HitWindow.h, не MyAnimNotifyState.h. HitWindow: OPEN мигает в дебаге.
