@@ -7,3 +7,8 @@ Move/Look через Enhanced Input работают. BP пока называе
 
 ## 2026-09-16
 Git, ROADMAP.md, DESIGN.md.
+
+## 2026-09-16 (ночь)
+Этап 2 закрыт: ECombatState, стамина, IA_Attack/IA_Block. Ловушка: в IMC_Default маппинги
+класть в Default Key Mappings, а не в Mapping Profile Overrides.
+

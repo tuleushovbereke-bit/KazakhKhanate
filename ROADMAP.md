@@ -23,7 +23,7 @@
 - [x] Enhanced Input: WASD, мышь
 - [x] Персонаж бегает по арене шаблона
 
-## Этап 2 — Боевая основа (без анимаций)
+## Этап 2 — Боевая основа (без анимаций) ✅
 Цель: удар и блок как состояния, а не заглушки.
 - [ ] `IA_Attack` (ЛКМ), `IA_Block` (ПКМ), привязка через `Started` / `Completed`
 - [ ] `enum class ECombatState { Idle, Attacking, Blocking, Staggered }` вместо двух bool
