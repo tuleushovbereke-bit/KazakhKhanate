@@ -9,6 +9,7 @@ class UCameraComponent;
 class USpringArmComponent;
 class UInputMappingContext;
 class UInputAction;
+class UAnimMontage;
 struct FInputActionValue;
 
 // NEW: состояние боя. Один enum вместо двух bool.
@@ -66,8 +67,13 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
     UInputAction* AttackAction;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+    UAnimMontage* AttackMontage;
+
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
     UInputAction* BlockAction;
+
+
 
     void Move(const FInputActionValue& Value);
     void Look(const FInputActionValue& Value);

@@ -11,6 +11,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Animation/AnimMontage.h"
 
 AMyCharacter::AMyCharacter()
 {
@@ -80,6 +81,10 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void AMyCharacter::Move(const FInputActionValue& Value)
 {
+    if (CombatState == ECombatState::Attacking)
+    {
+        return;
+    }
     const FVector2D Input = Value.Get<FVector2D>();
 
     if (Controller == nullptr)
@@ -105,7 +110,6 @@ void AMyCharacter::Look(const FInputActionValue& Value)
 
 void AMyCharacter::Attack()
 {
-    // Ѕить можно только из поко€ и только если хватает стамины
     if (CombatState != ECombatState::Idle || Stamina < AttackStaminaCost)
     {
         return;
@@ -114,7 +118,14 @@ void AMyCharacter::Attack()
     CombatState = ECombatState::Attacking;
     Stamina -= AttackStaminaCost;
 
-    GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &AMyCharacter::StopAttack, AttackDuration, false);
+    // »граем монтаж; функци€ возвращает его длину в секундах (0 Ч если не удалось)
+    float Duration = PlayAnimMontage(AttackMontage);
+    if (Duration <= 0.f)
+    {
+        Duration = AttackDuration;
+    }
+
+    GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &AMyCharacter::StopAttack, Duration, false);
 }
 
 void AMyCharacter::StopAttack()
