@@ -1,5 +1,5 @@
-// Private/EnemyBase.cpp
 #include "EnemyBase.h"
+#include "Kismet/GameplayStatics.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/Engine.h"
@@ -18,22 +18,32 @@ void AEnemyBase::BeginPlay()
         GEngine->AddOnScreenDebugMessage(4, 3.f, FColor::Green,
             FString::Printf(TEXT("%s spawned, HP: %.0f"), *GetName(), Health));
     }
+
+    GetWorldTimerManager().SetTimer(
+        AttackTimerHandle, this, &AEnemyBase::TryAttackPlayer,
+        AttackCooldown, true);
 }
 
 void AEnemyBase::OnDeath()
 {
     Super::OnDeath();
 
-    // Включаем физику на меше — персонаж падает
     GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
     GetMesh()->SetSimulatePhysics(true);
-
-    // Отключаем капсулу чтобы не мешала
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-    // Отключаем движение
     GetCharacterMovement()->DisableMovement();
-
-    // Убираем актора через 3 секунды
     SetLifeSpan(3.f);
+}
+
+void AEnemyBase::TryAttackPlayer()
+{
+    if (!IsAlive()) return;
+
+    AActor* Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+    if (!Player) return;
+
+    float Distance = FVector::Dist(GetActorLocation(), Player->GetActorLocation());
+    if (Distance > AttackRange) return;
+
+    UGameplayStatics::ApplyDamage(Player, AttackDamage, GetController(), this, nullptr);
 }

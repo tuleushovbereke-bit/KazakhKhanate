@@ -16,6 +16,12 @@ public:
 protected:
     virtual void BeginPlay() override;
     virtual void OnDeath() override;
+    // Таймер атаки
+    FTimerHandle AttackTimerHandle;
+    float AttackRange = 150.f;
+    float AttackCooldown = 2.f;
+
+    void TryAttackPlayer();
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
     float AttackDamage = 20.f;
