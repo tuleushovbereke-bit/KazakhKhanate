@@ -11,6 +11,7 @@ class USpringArmComponent;
 class UInputMappingContext;
 class UInputAction;
 class UAnimMontage;
+class UGameplayStatics;
 struct FInputActionValue;
 
 UENUM(BlueprintType)

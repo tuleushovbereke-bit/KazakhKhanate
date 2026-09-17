@@ -31,3 +31,7 @@ AnimNotifyState HitWindow работает, HitWindow: OPEN мигает в де
 ABaseCharacter с здоровьем и TakeDamage. AEnemyBase наследует от него.
 BP_Enemy на сцене стоит, анимация работает. Урон не наносится — разбираем в следующей сессии.
 MyCharacter теперь наследует от ABaseCharacter вместо ACharacter.
+
+## 2026-09-17 (день)
+Урон работает: SweepMultiByChannel в SetHitWindowOpen находит врага и вызывает ApplyDamage 25.
+Красная строка BP_Enemy took 25 damage в дебаге подтверждает.

@@ -5,6 +5,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/LocalPlayer.h"
+#include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
 #include "TimerManager.h"
 
@@ -177,4 +178,30 @@ void AMyCharacter::DrawDebugState() const
 void AMyCharacter::SetHitWindowOpen(bool bOpen)
 {
     bHitWindowOpen = bOpen;
+
+    if (!bOpen) return;
+
+    // Трассировка сферой вперёд от персонажа
+    FVector Start = GetActorLocation();
+    FVector End = Start + GetActorForwardVector() * 150.f;
+
+    TArray<FHitResult> Hits;
+    FCollisionShape Sphere = FCollisionShape::MakeSphere(60.f);
+
+    bool bHit = GetWorld()->SweepMultiByChannel(
+        Hits, Start, End, FQuat::Identity, ECC_Pawn, Sphere);
+
+    if (bHit)
+    {
+        for (FHitResult& Hit : Hits)
+        {
+            AActor* HitActor = Hit.GetActor();
+            if (HitActor && HitActor != this)
+            {
+                UGameplayStatics::ApplyDamage(
+                    HitActor, 25.f, GetController(), this, nullptr);
+                break;
+            }
+        }
+    }
 }
