@@ -23,5 +23,11 @@ Root motion в удаче оставили (выпад вперёд — souls-с
 Добавил commit.bat.
 
 ## 2026-09-16 (вечер)
-AnimNotifyState_HitWindow в Public/Private. Ловушка: #include должен быть
-AnimNotifyState_HitWindow.h, не MyAnimNotifyState.h. HitWindow: OPEN мигает в дебаге.
+AnimNotifyState HitWindow работает, HitWindow: OPEN мигает в дебаге.
+Ловушка: include должен быть AnimNotifyState_HitWindow.h, не MyAnimNotifyState.h.
+
+
+## 2026-09-17 (утро)
+ABaseCharacter с здоровьем и TakeDamage. AEnemyBase наследует от него.
+BP_Enemy на сцене стоит, анимация работает. Урон не наносится — разбираем в следующей сессии.
+MyCharacter теперь наследует от ABaseCharacter вместо ACharacter.

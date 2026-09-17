@@ -2,8 +2,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "ABaseCharacter.h"
 #include "MyCharacter.generated.h"
+
 
 class UCameraComponent;
 class USpringArmComponent;
@@ -22,7 +23,7 @@ enum class ECombatState : uint8
 };
 
 UCLASS()
-class KAZAKHKHANATE_API AMyCharacter : public ACharacter
+class KAZAKHKHANATE_API AMyCharacter : public ABaseCharacter
 {
     GENERATED_BODY()
 
