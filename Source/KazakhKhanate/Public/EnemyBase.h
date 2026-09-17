@@ -6,6 +6,8 @@
 #include "AIController.h"
 #include "EnemyBase.generated.h"
 
+class UAnimMontage;
+
 UCLASS()
 class KAZAKHKHANATE_API AEnemyBase : public ABaseCharacter
 {
@@ -29,6 +31,9 @@ protected:
     // Движение к игроку
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI")
     float DetectionRange = 600.f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+    UAnimMontage* AttackMontage;
 
     FTimerHandle MoveTimerHandle;
 

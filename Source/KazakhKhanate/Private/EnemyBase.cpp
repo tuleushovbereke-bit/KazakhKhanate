@@ -2,6 +2,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Animation/AnimMontage.h"
 #include "Engine/Engine.h"
 
 AEnemyBase::AEnemyBase()
@@ -49,6 +50,8 @@ void AEnemyBase::TryAttackPlayer()
     float Distance = FVector::Dist(GetActorLocation(), Player->GetActorLocation());
     if (Distance > AttackRange) return;
 
+    // Играем анимацию удара
+    PlayAnimMontage(AttackMontage);
     UGameplayStatics::ApplyDamage(Player, AttackDamage, GetController(), this, nullptr);
 }
 
