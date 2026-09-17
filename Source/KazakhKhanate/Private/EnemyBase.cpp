@@ -1,5 +1,7 @@
 // Private/EnemyBase.cpp
 #include "EnemyBase.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/Engine.h"
 
 AEnemyBase::AEnemyBase()
@@ -22,7 +24,16 @@ void AEnemyBase::OnDeath()
 {
     Super::OnDeath();
 
-    // Пока просто убираем с уровня через 2 секунды
-    SetActorHiddenInGame(true);
-    SetActorEnableCollision(false);
+    // Включаем физику на меше — персонаж падает
+    GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+    GetMesh()->SetSimulatePhysics(true);
+
+    // Отключаем капсулу чтобы не мешала
+    GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    // Отключаем движение
+    GetCharacterMovement()->DisableMovement();
+
+    // Убираем актора через 3 секунды
+    SetLifeSpan(3.f);
 }

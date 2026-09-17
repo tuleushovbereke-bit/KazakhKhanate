@@ -2,6 +2,7 @@
 #include "ABaseCharacter.h"
 #include "Engine/Engine.h"
 
+
 ABaseCharacter::ABaseCharacter()
 {
     PrimaryActorTick.bCanEverTick = true;
