@@ -34,6 +34,7 @@ public:
 
 protected:
     virtual void BeginPlay() override;
+    virtual void OnDeath() override;
 
 public:
     virtual void Tick(float DeltaTime) override;
@@ -81,6 +82,8 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
     UInputAction* LockOnAction;
+
+
 
     void Move(const FInputActionValue& Value);
     void Look(const FInputActionValue& Value);
@@ -134,4 +137,5 @@ private:
     FTimerHandle AttackTimerHandle;
 
     void DrawDebugState() const;
+    void Respawn();
 };

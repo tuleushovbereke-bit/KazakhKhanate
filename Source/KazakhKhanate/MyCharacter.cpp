@@ -8,6 +8,7 @@
 #include "Engine/Engine.h"
 #include "TimerManager.h"
 #include "Engine/OverlapResult.h"
+#include "Components/CapsuleComponent.h"
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -264,4 +265,31 @@ void AMyCharacter::ToggleLockOn()
         bUseControllerRotationYaw = true;
         GetCharacterMovement()->bOrientRotationToMovement = false;
     }
+}
+
+void AMyCharacter::OnDeath()
+{
+    Super::OnDeath();
+
+    // Отключаем ввод
+    if (APlayerController* PC = Cast<APlayerController>(GetController()))
+    {
+        DisableInput(PC);
+    }
+
+    // Рэгдолл как у врага
+    GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+    GetMesh()->SetSimulatePhysics(true);
+    GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    GetCharacterMovement()->DisableMovement();
+
+    // Через 3 секунды — возрождение
+    GetWorldTimerManager().SetTimer(
+        AttackTimerHandle, this, &AMyCharacter::Respawn, 3.f, false);
+}
+
+void AMyCharacter::Respawn()
+{
+    // Пока просто перезапускаем уровень
+    UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()));
 }
