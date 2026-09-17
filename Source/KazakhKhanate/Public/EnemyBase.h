@@ -3,6 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "ABaseCharacter.h"
+#include "AIController.h"
 #include "EnemyBase.generated.h"
 
 UCLASS()
@@ -25,4 +26,11 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
     float AttackDamage = 20.f;
+    // Движение к игроку
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI")
+    float DetectionRange = 600.f;
+
+    FTimerHandle MoveTimerHandle;
+
+    void TryMoveToPlayer();
 };

@@ -22,6 +22,10 @@ void AEnemyBase::BeginPlay()
     GetWorldTimerManager().SetTimer(
         AttackTimerHandle, this, &AEnemyBase::TryAttackPlayer,
         AttackCooldown, true);
+
+    GetWorldTimerManager().SetTimer(
+        MoveTimerHandle, this, &AEnemyBase::TryMoveToPlayer,
+        0.5f, true);
 }
 
 void AEnemyBase::OnDeath()
@@ -46,4 +50,20 @@ void AEnemyBase::TryAttackPlayer()
     if (Distance > AttackRange) return;
 
     UGameplayStatics::ApplyDamage(Player, AttackDamage, GetController(), this, nullptr);
+}
+
+void AEnemyBase::TryMoveToPlayer()
+{
+    if (!IsAlive()) return;
+
+    AActor* Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+    if (!Player) return;
+
+    float Distance = FVector::Dist(GetActorLocation(), Player->GetActorLocation());
+    if (Distance > DetectionRange) return;
+
+    if (AAIController* AI = Cast<AAIController>(GetController()))
+    {
+        AI->MoveToActor(Player, 100.f);
+    }
 }
