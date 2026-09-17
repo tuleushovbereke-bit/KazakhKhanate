@@ -1,4 +1,3 @@
-// MyCharacter.cpp
 #include "MyCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -8,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
 #include "TimerManager.h"
+#include "Engine/OverlapResult.h"
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -56,10 +56,28 @@ void AMyCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // NEW: стамина восстанавливаетс€ только в покое
     if (CombatState == ECombatState::Idle)
     {
         Stamina = FMath::Clamp(Stamina + StaminaRegenPerSecond * DeltaTime, 0.f, MaxStamina);
+    }
+
+    if (bIsLockedOn && LockOnTarget)
+    {
+        if (!LockOnTarget->IsActorBeingDestroyed() && LockOnTarget->IsHidden())
+        {
+            bIsLockedOn = false;
+            LockOnTarget = nullptr;
+            bUseControllerRotationYaw = false;
+            GetCharacterMovement()->bOrientRotationToMovement = true;
+        }
+        else
+        {
+            FVector Direction = (LockOnTarget->GetActorLocation() + FVector(0, 0, 60.f)) - GetActorLocation();
+            FRotator LookAt = Direction.Rotation();
+            FRotator Current = GetControlRotation();
+            FRotator NewRot = FMath::RInterpTo(Current, LookAt, DeltaTime, 10.f);
+            GetController()->SetControlRotation(NewRot);
+        }
     }
 
     DrawDebugState();
@@ -73,11 +91,10 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
     {
         EIC->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyCharacter::Move);
         EIC->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMyCharacter::Look);
-
-        // NEW: атака Ч один раз при нажатии; блок Ч держим, пока нажата
         EIC->BindAction(AttackAction, ETriggerEvent::Started, this, &AMyCharacter::Attack);
         EIC->BindAction(BlockAction, ETriggerEvent::Started, this, &AMyCharacter::Block);
         EIC->BindAction(BlockAction, ETriggerEvent::Completed, this, &AMyCharacter::StopBlock);
+        EIC->BindAction(LockOnAction, ETriggerEvent::Started, this, &AMyCharacter::ToggleLockOn);
     }
 }
 
@@ -121,7 +138,6 @@ void AMyCharacter::Attack()
     CombatState = ECombatState::Attacking;
     Stamina -= AttackStaminaCost;
 
-    // »граем монтаж; функци€ возвращает его длину в секундах (0 Ч если не удалось)
     float Duration = PlayAnimMontage(AttackMontage);
     if (Duration <= 0.f)
     {
@@ -137,7 +153,7 @@ void AMyCharacter::StopAttack()
     {
         CombatState = ECombatState::Idle;
     }
-    bHitWindowOpen = false;   // страховка: если монтаж прервали, окно не должно остатьс€ открытым
+    bHitWindowOpen = false;
 }
 
 void AMyCharacter::Block()
@@ -183,7 +199,6 @@ void AMyCharacter::SetHitWindowOpen(bool bOpen)
 
     if (!bOpen) return;
 
-    // “рассировка сферой вперЄд от персонажа
     FVector Start = GetActorLocation();
     FVector End = Start + GetActorForwardVector() * 150.f;
 
@@ -205,5 +220,48 @@ void AMyCharacter::SetHitWindowOpen(bool bOpen)
                 break;
             }
         }
+    }
+}
+
+void AMyCharacter::ToggleLockOn()
+{
+    if (bIsLockedOn)
+    {
+        bIsLockedOn = false;
+        LockOnTarget = nullptr;
+        bUseControllerRotationYaw = false;
+        GetCharacterMovement()->bOrientRotationToMovement = true;
+        return;
+    }
+
+    TArray<FOverlapResult> Overlaps;
+    FCollisionShape Sphere = FCollisionShape::MakeSphere(LockOnRange);
+
+    GetWorld()->OverlapMultiByChannel(
+        Overlaps, GetActorLocation(), FQuat::Identity, ECC_Pawn, Sphere);
+
+    AActor* ClosestEnemy = nullptr;
+    float ClosestDist = LockOnRange;
+
+    for (FOverlapResult& Overlap : Overlaps)
+    {
+        AActor* OtherActor = Overlap.GetActor();
+        if (OtherActor && OtherActor != this && OtherActor->ActorHasTag(FName("Enemy")))
+        {
+            float Dist = FVector::Dist(GetActorLocation(), OtherActor->GetActorLocation());
+            if (Dist < ClosestDist)
+            {
+                ClosestDist = Dist;
+                ClosestEnemy = OtherActor;
+            }
+        }
+    }
+
+    if (ClosestEnemy)
+    {
+        bIsLockedOn = true;
+        LockOnTarget = ClosestEnemy;
+        bUseControllerRotationYaw = true;
+        GetCharacterMovement()->bOrientRotationToMovement = false;
     }
 }

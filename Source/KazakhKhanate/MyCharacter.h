@@ -12,6 +12,7 @@ class UInputMappingContext;
 class UInputAction;
 class UAnimMontage;
 class UGameplayStatics;
+class AActor;
 struct FInputActionValue;
 
 UENUM(BlueprintType)
@@ -59,6 +60,9 @@ public:
     UFUNCTION(BlueprintPure, Category = "Combat")
     bool IsHitWindowOpen() const { return bHitWindowOpen; }
 
+    UFUNCTION(BlueprintCallable, Category = "Combat")
+    void ToggleLockOn();
+
 protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
     UInputMappingContext* DefaultMappingContext;
@@ -74,6 +78,9 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
     UInputAction* BlockAction;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UInputAction* LockOnAction;
 
     void Move(const FInputActionValue& Value);
     void Look(const FInputActionValue& Value);
@@ -112,6 +119,15 @@ private:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))   // <
         bool bHitWindowOpen = false;                                                                                // <
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+    bool bIsLockedOn = false;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+    AActor* LockOnTarget = nullptr;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+    float LockOnRange = 1000.f;
 
     float DefaultWalkSpeed = 600.f;   // <<<  запоминаем в BeginPlay, чтобы вернуть после блока
 
