@@ -168,10 +168,12 @@ void AMyCharacter::DrawDebugState() const
     }
 
     const FString StateName = UEnum::GetDisplayValueAsText(CombatState).ToString();
-    const FString Msg = FString::Printf(TEXT("State: %s   Stamina: %.0f / %.0f   HitWindow: %s"),
-        *StateName, Stamina, MaxStamina, bHitWindowOpen ? TEXT("OPEN") : TEXT("-"));
+    const FString Msg = FString::Printf(
+        TEXT("State: %s   Stamina: %.0f / %.0f   HitWindow: %s   HP: %.0f"),
+        *StateName, Stamina, MaxStamina,
+        bHitWindowOpen ? TEXT("OPEN") : TEXT("-"),
+        Health);
 
-    // Ключ 1 — сообщение с этим ключом перезаписывается, а не копится
     GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::Yellow, Msg);
 }
 
