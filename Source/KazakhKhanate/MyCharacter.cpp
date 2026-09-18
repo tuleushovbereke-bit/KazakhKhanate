@@ -98,6 +98,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
         EIC->BindAction(BlockAction, ETriggerEvent::Started, this, &AMyCharacter::Block);
         EIC->BindAction(BlockAction, ETriggerEvent::Completed, this, &AMyCharacter::StopBlock);
         EIC->BindAction(LockOnAction, ETriggerEvent::Started, this, &AMyCharacter::ToggleLockOn);
+        EIC->BindAction(DodgeAction, ETriggerEvent::Started, this, &AMyCharacter::Dodge);
     }
 }
 
@@ -177,6 +178,51 @@ void AMyCharacter::StopBlock()
         CombatState = ECombatState::Idle;
     }
     GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
+}
+
+void AMyCharacter::Dodge()
+{
+    // Катиться можно только стоя/на бегу и при наличии стамины
+    if (CombatState != ECombatState::Idle || Stamina < DodgeStaminaCost)
+    {
+        return;
+    }
+
+    CombatState = ECombatState::Dodging;
+    Stamina -= DodgeStaminaCost;
+
+    // Направление переката: куда жмёшь WASD, а если стоишь — назад
+    FVector DodgeDir = GetLastMovementInputVector();
+    if (DodgeDir.IsNearlyZero())
+    {
+        DodgeDir = -GetActorForwardVector();
+    }
+    DodgeDir.Normalize();
+
+    // Развернуть персонажа лицом в сторону переката
+    SetActorRotation(DodgeDir.Rotation());
+
+    // Придать импульс переката
+    LaunchCharacter(DodgeDir * DodgeImpulse, true, false);
+
+    // Проиграть анимацию, длительность состояния = длина монтажа
+    float Duration = PlayAnimMontage(DodgeMontage);
+    if (Duration <= 0.f)
+    {
+        Duration = DodgeDuration;
+    }
+
+    GetWorldTimerManager().SetTimer(
+        DodgeTimerHandle, this, &AMyCharacter::StopDodge, Duration, false);
+}
+
+void AMyCharacter::StopDodge()
+{
+    if (CombatState == ECombatState::Dodging)
+    {
+        CombatState = ECombatState::Idle;
+    }
+    bIsInvincible = false;
 }
 
 void AMyCharacter::DrawDebugState() const

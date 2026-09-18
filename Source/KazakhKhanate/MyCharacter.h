@@ -21,7 +21,8 @@ enum class ECombatState : uint8
     Idle        UMETA(DisplayName = "Idle"),
     Attacking   UMETA(DisplayName = "Attacking"),
     Blocking    UMETA(DisplayName = "Blocking"),
-    Staggered   UMETA(DisplayName = "Staggered")
+    Staggered   UMETA(DisplayName = "Staggered"),
+    Dodging     UMETA(DisplayName = "Dodging")
 };
 
 UCLASS()
@@ -48,6 +49,9 @@ public:
 
     void StopAttack();
     void StopBlock();
+
+    void Dodge();
+    void StopDodge();
 
     UFUNCTION(BlueprintPure, Category = "Combat")
     ECombatState GetCombatState() const { return CombatState; }
@@ -86,6 +90,8 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
     UInputAction* LockOnAction;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UInputAction* DodgeAction;
 
 
     void Move(const FInputActionValue& Value);
@@ -102,6 +108,18 @@ protected:
     float StaminaRegenPerSecond = 20.f;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+    float DodgeStaminaCost = 20.f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+    float DodgeDuration = 0.6f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+    float DodgeImpulse = 900.f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+    UAnimMontage* DodgeMontage;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
     float AttackStaminaCost = 25.f;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
@@ -116,6 +134,11 @@ private:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
     USpringArmComponent* SpringArmComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+    bool bIsInvincible = false;
+
+    FTimerHandle DodgeTimerHandle;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
     ECombatState CombatState = ECombatState::Idle;
