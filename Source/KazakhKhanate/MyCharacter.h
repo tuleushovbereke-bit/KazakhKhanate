@@ -55,6 +55,9 @@ public:
     UFUNCTION(BlueprintPure, Category = "Combat")
     float GetStamina() const { return Stamina; }
 
+    UFUNCTION(BlueprintPure, Category = "Combat")
+    float GetStaminaPercent() const { return MaxStamina > 0.f ? Stamina / MaxStamina : 0.f; }
+
     // Вызывается из AnimNotifyState_HitWindow
     void SetHitWindowOpen(bool bOpen);
 

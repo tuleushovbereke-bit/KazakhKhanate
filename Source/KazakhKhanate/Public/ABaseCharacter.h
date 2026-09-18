@@ -21,6 +21,9 @@ public:
     float GetHealth() const { return Health; }
 
     UFUNCTION(BlueprintPure, Category = "Combat")
+    float GetHealthPercent() const { return MaxHealth > 0.f ? Health / MaxHealth : 0.f; }
+
+    UFUNCTION(BlueprintPure, Category = "Combat")
     bool IsAlive() const { return Health > 0.f; }
 
 protected:

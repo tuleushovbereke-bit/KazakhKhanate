@@ -73,8 +73,10 @@ void AMyCharacter::Tick(float DeltaTime)
         }
         else
         {
-            FVector Direction = (LockOnTarget->GetActorLocation() + FVector(0, 0, 60.f)) - GetActorLocation();
+            FVector Start = GetActorLocation() + FVector(0, 0, 40.f);   // от головы игрока, а не от пояса
+            FVector Direction = LockOnTarget->GetActorLocation() - GetActorLocation();
             FRotator LookAt = Direction.Rotation();
+            LookAt.Pitch = -15.f;
             FRotator Current = GetControlRotation();
             FRotator NewRot = FMath::RInterpTo(Current, LookAt, DeltaTime, 10.f);
             GetController()->SetControlRotation(NewRot);
