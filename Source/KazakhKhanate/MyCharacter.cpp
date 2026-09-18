@@ -1,4 +1,4 @@
-#include "MyCharacter.h"
+п»ї#include "MyCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -73,7 +73,7 @@ void AMyCharacter::Tick(float DeltaTime)
         }
         else
         {
-            FVector Start = GetActorLocation() + FVector(0, 0, 40.f);   // от головы игрока, а не от пояса
+            FVector Start = GetActorLocation() + FVector(0, 0, 40.f);   // РѕС‚ РіРѕР»РѕРІС‹ РёРіСЂРѕРєР°, Р° РЅРµ РѕС‚ РїРѕСЏСЃР°
             FVector Direction = LockOnTarget->GetActorLocation() - GetActorLocation();
             FRotator LookAt = Direction.Rotation();
             LookAt.Pitch = -15.f;
@@ -273,36 +273,36 @@ void AMyCharacter::OnDeath()
 {
     Super::OnDeath();
 
-    // Отключаем ввод
+    // РћС‚РєР»СЋС‡Р°РµРј РІРІРѕРґ
     if (APlayerController* PC = Cast<APlayerController>(GetController()))
     {
         DisableInput(PC);
     }
 
-    // Рэгдолл как у врага
+    // Р СЌРіРґРѕР»Р» РєР°Рє Сѓ РІСЂР°РіР°
     GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
     GetMesh()->SetSimulatePhysics(true);
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     GetCharacterMovement()->DisableMovement();
 
-    // Через 3 секунды — возрождение
+    // Р§РµСЂРµР· 3 СЃРµРєСѓРЅРґС‹ вЂ” РІРѕР·СЂРѕР¶РґРµРЅРёРµ
     GetWorldTimerManager().SetTimer(
         AttackTimerHandle, this, &AMyCharacter::Respawn, 3.f, false);
 }
 
 void AMyCharacter::Respawn()
 {
-    // 1. Вернуть здоровье и стамину
+    // 1. Р’РµСЂРЅСѓС‚СЊ Р·РґРѕСЂРѕРІСЊРµ Рё СЃС‚Р°РјРёРЅСѓ
     Health = MaxHealth;
     Stamina = MaxStamina;
     CombatState = ECombatState::Idle;
 
-    // 2. Выйти из рэгдолла: выключить физику меша
+    // 2. Р’С‹Р№С‚Рё РёР· СЂСЌРіРґРѕР»Р»Р°: РІС‹РєР»СЋС‡РёС‚СЊ С„РёР·РёРєСѓ РјРµС€Р°
     GetMesh()->SetSimulatePhysics(false);
     GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
-    // 3. Вернуть меш в стойку относительно капсулы.
-    //    Заводское смещение меша берём из CDO — эталонного экземпляра класса.
+    // 3. Р’РµСЂРЅСѓС‚СЊ РјРµС€ РІ СЃС‚РѕР№РєСѓ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РєР°РїСЃСѓР»С‹.
+    //    Р—Р°РІРѕРґСЃРєРѕРµ СЃРјРµС‰РµРЅРёРµ РјРµС€Р° Р±РµСЂС‘Рј РёР· CDO вЂ” СЌС‚Р°Р»РѕРЅРЅРѕРіРѕ СЌРєР·РµРјРїР»СЏСЂР° РєР»Р°СЃСЃР°.
     const ACharacter* Default = GetClass()->GetDefaultObject<ACharacter>();
     GetMesh()->AttachToComponent(
         GetCapsuleComponent(),
@@ -311,11 +311,13 @@ void AMyCharacter::Respawn()
         Default->GetMesh()->GetRelativeLocation(),
         Default->GetMesh()->GetRelativeRotation());
 
-    // 4. Вернуть капсуле коллизию и движение
+    // 4. Р’РµСЂРЅСѓС‚СЊ РєР°РїСЃСѓР»Рµ РєРѕР»Р»РёР·РёСЋ Рё РґРІРёР¶РµРЅРёРµ
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 
-    // 5. Найти очаг по тегу и телепортировать к нему
+    
+
+    // 5. РќР°Р№С‚Рё РѕС‡Р°Рі РїРѕ С‚РµРіСѓ Рё С‚РµР»РµРїРѕСЂС‚РёСЂРѕРІР°С‚СЊ Рє РЅРµРјСѓ
     TArray<AActor*> FoundOchags;
     UGameplayStatics::GetAllActorsWithTag(this, FName("Ochag"), FoundOchags);
     if (FoundOchags.Num() > 0)
@@ -325,10 +327,24 @@ void AMyCharacter::Respawn()
         if (AController* C = GetController())
         {
             C->SetControlRotation(OchagYaw);
+           
         }
-    }
 
-    // 6. Вернуть ввод
+        // 5b. РЎР±СЂРѕСЃ РІСЂР°РіРѕРІ
+        TArray<AActor*> OldEnemies;
+        UGameplayStatics::GetAllActorsWithTag(this, FName("Enemy"), OldEnemies);
+        for (AActor* Enemy : OldEnemies)
+        {
+            Enemy->Destroy();
+        }
+
+        if (UFunction* SpawnFunc = FoundOchags[0]->FindFunction(FName("SpawnEnemies")))
+        {
+            FoundOchags[0]->ProcessEvent(SpawnFunc, nullptr);
+        }
+    }                                          // в†ђ Р’РћРў Р­РўРћР™ СЃРєРѕР±РєРё РЅРµ С…РІР°С‚Р°РµС‚ (Р·Р°РєСЂС‹РІР°РµС‚ Р±Р»РѕРє 5)
+
+    // 6. Р’РµСЂРЅСѓС‚СЊ РІРІРѕРґ
     if (APlayerController* PC = Cast<APlayerController>(GetController()))
     {
         EnableInput(PC);
