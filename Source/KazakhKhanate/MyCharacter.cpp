@@ -292,6 +292,45 @@ void AMyCharacter::OnDeath()
 
 void AMyCharacter::Respawn()
 {
-    // Пока просто перезапускаем уровень
-    UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()));
+    // 1. Вернуть здоровье и стамину
+    Health = MaxHealth;
+    Stamina = MaxStamina;
+    CombatState = ECombatState::Idle;
+
+    // 2. Выйти из рэгдолла: выключить физику меша
+    GetMesh()->SetSimulatePhysics(false);
+    GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+
+    // 3. Вернуть меш в стойку относительно капсулы.
+    //    Заводское смещение меша берём из CDO — эталонного экземпляра класса.
+    const ACharacter* Default = GetClass()->GetDefaultObject<ACharacter>();
+    GetMesh()->AttachToComponent(
+        GetCapsuleComponent(),
+        FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+    GetMesh()->SetRelativeLocationAndRotation(
+        Default->GetMesh()->GetRelativeLocation(),
+        Default->GetMesh()->GetRelativeRotation());
+
+    // 4. Вернуть капсуле коллизию и движение
+    GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
+    // 5. Найти очаг по тегу и телепортировать к нему
+    TArray<AActor*> FoundOchags;
+    UGameplayStatics::GetAllActorsWithTag(this, FName("Ochag"), FoundOchags);
+    if (FoundOchags.Num() > 0)
+    {
+        const FRotator OchagYaw(0.f, FoundOchags[0]->GetActorRotation().Yaw, 0.f);
+        SetActorLocationAndRotation(FoundOchags[0]->GetActorLocation(), OchagYaw);
+        if (AController* C = GetController())
+        {
+            C->SetControlRotation(OchagYaw);
+        }
+    }
+
+    // 6. Вернуть ввод
+    if (APlayerController* PC = Cast<APlayerController>(GetController()))
+    {
+        EnableInput(PC);
+    }
 }
