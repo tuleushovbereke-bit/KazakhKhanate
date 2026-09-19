@@ -1,6 +1,9 @@
 // Private/BaseCharacter.cpp
 #include "ABaseCharacter.h"
 #include "Engine/Engine.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/OverlapResult.h"
+#include "Engine/World.h"
 
 
 ABaseCharacter::ABaseCharacter()
@@ -36,5 +39,36 @@ void ABaseCharacter::OnDeath()
     {
         GEngine->AddOnScreenDebugMessage(3, 5.f, FColor::Orange,
             FString::Printf(TEXT("%s died!"), *GetName()));
+    }
+}
+
+void ABaseCharacter::SetHitWindowOpen(bool bOpen)
+{
+    bHitWindowOpen = bOpen;
+
+    if (!bOpen) return;
+
+    // —вип вперЄд от персонажа в момент удара
+    FVector Start = GetActorLocation();
+    FVector End = Start + GetActorForwardVector() * HitRange;
+
+    TArray<FHitResult> Hits;
+    FCollisionShape Sphere = FCollisionShape::MakeSphere(HitRadius);
+
+    bool bHit = GetWorld()->SweepMultiByChannel(
+        Hits, Start, End, FQuat::Identity, ECC_Pawn, Sphere);
+
+    if (bHit)
+    {
+        for (FHitResult& Hit : Hits)
+        {
+            AActor* HitActor = Hit.GetActor();
+            if (HitActor && HitActor != this)
+            {
+                UGameplayStatics::ApplyDamage(
+                    HitActor, HitDamage, GetController(), this, nullptr);
+                break;
+            }
+        }
     }
 }

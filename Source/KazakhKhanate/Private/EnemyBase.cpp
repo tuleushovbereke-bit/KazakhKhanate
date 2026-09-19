@@ -8,6 +8,11 @@
 AEnemyBase::AEnemyBase()
 {
     PrimaryActorTick.bCanEverTick = true;
+
+    HitDamage = 20.f;
+    HitRange = 150.f;
+    HitRadius = 60.f;
+    
 }
 
 void AEnemyBase::BeginPlay()
@@ -52,7 +57,6 @@ void AEnemyBase::TryAttackPlayer()
 
     // Играем анимацию удара
     PlayAnimMontage(AttackMontage);
-    UGameplayStatics::ApplyDamage(Player, AttackDamage, GetController(), this, nullptr);
 }
 
 void AEnemyBase::TryMoveToPlayer()

@@ -23,6 +23,10 @@ AMyCharacter::AMyCharacter()
     bUseControllerRotationYaw = false;
     bUseControllerRotationRoll = false;
 
+    HitDamage = 25.f;
+    HitRange = 150.f;
+    HitRadius = 60.f;
+
     GetCharacterMovement()->bOrientRotationToMovement = true;
     GetCharacterMovement()->RotationRate = FRotator(0.f, 500.f, 0.f);
 
@@ -240,36 +244,6 @@ void AMyCharacter::DrawDebugState() const
         Health);
 
     GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::Yellow, Msg);
-}
-
-void AMyCharacter::SetHitWindowOpen(bool bOpen)
-{
-    bHitWindowOpen = bOpen;
-
-    if (!bOpen) return;
-
-    FVector Start = GetActorLocation();
-    FVector End = Start + GetActorForwardVector() * 150.f;
-
-    TArray<FHitResult> Hits;
-    FCollisionShape Sphere = FCollisionShape::MakeSphere(60.f);
-
-    bool bHit = GetWorld()->SweepMultiByChannel(
-        Hits, Start, End, FQuat::Identity, ECC_Pawn, Sphere);
-
-    if (bHit)
-    {
-        for (FHitResult& Hit : Hits)
-        {
-            AActor* HitActor = Hit.GetActor();
-            if (HitActor && HitActor != this)
-            {
-                UGameplayStatics::ApplyDamage(
-                    HitActor, 25.f, GetController(), this, nullptr);
-                break;
-            }
-        }
-    }
 }
 
 void AMyCharacter::ToggleLockOn()

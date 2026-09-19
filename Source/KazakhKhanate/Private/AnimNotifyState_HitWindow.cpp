@@ -1,5 +1,5 @@
 #include "AnimNotifyState_HitWindow.h"
-#include "../MyCharacter.h"
+#include "ABaseCharacter.h"
 #include "Components/SkeletalMeshComponent.h"
 
 void UAnimNotifyState_HitWindow::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
@@ -9,7 +9,7 @@ void UAnimNotifyState_HitWindow::NotifyBegin(USkeletalMeshComponent* MeshComp, U
 
     if (MeshComp == nullptr) return;
 
-    if (AMyCharacter* Character = Cast<AMyCharacter>(MeshComp->GetOwner()))
+    if (ABaseCharacter* Character = Cast<ABaseCharacter>(MeshComp->GetOwner()))
     {
         Character->SetHitWindowOpen(true);
     }
@@ -22,7 +22,7 @@ void UAnimNotifyState_HitWindow::NotifyEnd(USkeletalMeshComponent* MeshComp, UAn
 
     if (MeshComp == nullptr) return;
 
-    if (AMyCharacter* Character = Cast<AMyCharacter>(MeshComp->GetOwner()))
+    if (ABaseCharacter* Character = Cast<ABaseCharacter>(MeshComp->GetOwner()))
     {
         Character->SetHitWindowOpen(false);
     }

@@ -62,12 +62,6 @@ public:
     UFUNCTION(BlueprintPure, Category = "Combat")
     float GetStaminaPercent() const { return MaxStamina > 0.f ? Stamina / MaxStamina : 0.f; }
 
-    // Вызывается из AnimNotifyState_HitWindow
-    void SetHitWindowOpen(bool bOpen);
-
-    UFUNCTION(BlueprintPure, Category = "Combat")
-    bool IsHitWindowOpen() const { return bHitWindowOpen; }
-
     UFUNCTION(BlueprintCallable, Category = "Combat")
     void ToggleLockOn();
 
@@ -129,9 +123,14 @@ protected:
         float BlockWalkSpeed = 200.f;                                          // <
 
 private:
+
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
     UCameraComponent* CameraComponent;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+    USpringArmComponent* SpringArmComponent;
+  
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
     USpringArmComponent* SpringArmComponent;
 
@@ -145,10 +144,7 @@ private:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
     float Stamina = 100.f;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))   // <
-        bool bHitWindowOpen = false;                                                                                // <
-
+                                                                              // <
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
     bool bIsLockedOn = false;
 

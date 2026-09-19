@@ -26,12 +26,31 @@ public:
     UFUNCTION(BlueprintPure, Category = "Combat")
     bool IsAlive() const { return Health > 0.f; }
 
+    // Окно удара: вызывается из AnimNotifyState в ударной фазе анимации
+    void SetHitWindowOpen(bool bOpen);
+
+    UFUNCTION(BlueprintPure, Category = "Combat")
+    bool IsHitWindowOpen() const { return bHitWindowOpen; }
+
 protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
     float MaxHealth = 100.f;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
     float Health = 100.f;
+
+    // Параметры удара (каждый класс задаёт свои)
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+    float HitDamage = 20.f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+    float HitRange = 150.f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+    float HitRadius = 60.f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+    bool bHitWindowOpen = false;
 
     // Вызывается когда здоровье упало до нуля
     virtual void OnDeath();
