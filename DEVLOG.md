@@ -80,3 +80,4 @@ HUD: бары HP и стамины (бинды + вывод на экран); л
 i-frames: перекат даёт неуязвимость (bIsInvincible) на IFrameDuration через таймер, TakeDamage игрока игнорирует урон в окне. StartIFrames/StopIFrames — точка апгрейда под нотифай
 ## 2026-09-19 (день)
 Три скорости передвижения: шаг (Ctrl), бег (по умолчанию), спринт (Shift). WalkSpeed/RunSpeed/SprintSpeed в категории Movement, бинды WalkAction/SprintAction. Убран старый DefaultWalkSpeed
+Трата стамины на спринт: расход SprintStaminaCost/сек при движении, реген только вне спринта, при нуле — сброс на бег
