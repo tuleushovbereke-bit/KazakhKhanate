@@ -46,7 +46,7 @@ void AMyCharacter::BeginPlay()
     Super::BeginPlay();
 
     Stamina = MaxStamina;
-    DefaultWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+    
 
     if (APlayerController* PC = Cast<APlayerController>(GetController()))
     {
@@ -55,6 +55,7 @@ void AMyCharacter::BeginPlay()
         {
             Subsystem->AddMappingContext(DefaultMappingContext, 0);
         }
+        GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
     }
 }
 
@@ -106,6 +107,8 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
         EIC->BindAction(DodgeAction, ETriggerEvent::Started, this, &AMyCharacter::Dodge);
         EIC->BindAction(SprintAction, ETriggerEvent::Started, this, &AMyCharacter::StartSprint);
         EIC->BindAction(SprintAction, ETriggerEvent::Completed, this, &AMyCharacter::StopSprint);
+        EIC->BindAction(WalkAction, ETriggerEvent::Started, this, &AMyCharacter::StartWalk);
+        EIC->BindAction(WalkAction, ETriggerEvent::Completed, this, &AMyCharacter::StopWalk);
     }
 }
 
@@ -184,7 +187,7 @@ void AMyCharacter::StopBlock()
     {
         CombatState = ECombatState::Idle;
     }
-    GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
+    GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
 }
 
 void AMyCharacter::Dodge()
