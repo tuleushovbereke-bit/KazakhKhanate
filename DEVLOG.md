@@ -76,3 +76,5 @@ HUD: бары HP и стамины (бинды + вывод на экран); л
 
 ## 2026-09-19 (до обеда)
 Рефакторинг: окно удара поднято в ABaseCharacter, игрок и враг делят одну боевую систему (SweepMultiByChannel через HitWindow notify). Враг бьёт честно в фазе анимации
+## Через час
+i-frames: перекат даёт неуязвимость (bIsInvincible) на IFrameDuration через таймер, TakeDamage игрока игнорирует урон в окне. StartIFrames/StopIFrames — точка апгрейда под нотифай
