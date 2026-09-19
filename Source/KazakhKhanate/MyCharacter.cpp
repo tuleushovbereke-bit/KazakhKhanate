@@ -188,10 +188,11 @@ void AMyCharacter::Dodge()
 {
     // Катиться можно только стоя/на бегу и при наличии стамины
     if (CombatState != ECombatState::Idle || Stamina < DodgeStaminaCost)
+       
     {
         return;
     }
-
+    StartIFrames();
     CombatState = ECombatState::Dodging;
     Stamina -= DodgeStaminaCost;
 
@@ -218,6 +219,18 @@ void AMyCharacter::Dodge()
 
     GetWorldTimerManager().SetTimer(
         DodgeTimerHandle, this, &AMyCharacter::StopDodge, Duration, false);
+}
+
+void AMyCharacter::StartIFrames()
+{
+    bIsInvincible = true;
+    GetWorldTimerManager().SetTimer(
+        IFrameTimerHandle, this, &AMyCharacter::StopIFrames, IFrameDuration, false);
+}
+
+void AMyCharacter::StopIFrames()
+{
+    bIsInvincible = false;
 }
 
 void AMyCharacter::StopDodge()
@@ -369,4 +382,20 @@ void AMyCharacter::Respawn()
     {
         EnableInput(PC);
     }
+}
+
+float AMyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
+    AController* EventInstigator, AActor* DamageCauser)
+{
+    // Неуязвим в i-frames — урон игнорируем
+    if (bIsInvincible)
+    {
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("DODGE! (i-frames)"));
+        }
+        return 0.f;
+    }
+
+    return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }

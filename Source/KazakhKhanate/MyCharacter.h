@@ -40,6 +40,8 @@ protected:
 public:
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+        AController* EventInstigator, AActor* DamageCauser) override;
 
     UFUNCTION(BlueprintCallable, Category = "Combat")
     void Attack();
@@ -52,6 +54,8 @@ public:
 
     void Dodge();
     void StopDodge();
+    void StartIFrames();
+    void StopIFrames();
 
     UFUNCTION(BlueprintPure, Category = "Combat")
     ECombatState GetCombatState() const { return CombatState; }
@@ -108,6 +112,9 @@ protected:
     float DodgeDuration = 0.6f;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+    float IFrameDuration = 0.4f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
     float DodgeImpulse = 900.f;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
@@ -134,6 +141,7 @@ private:
     bool bIsInvincible = false;
 
     FTimerHandle DodgeTimerHandle;
+    FTimerHandle IFrameTimerHandle;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
     ECombatState CombatState = ECombatState::Idle;
