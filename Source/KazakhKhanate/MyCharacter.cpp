@@ -63,7 +63,16 @@ void AMyCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (CombatState == ECombatState::Idle)
+    if (bIsSprinting && GetVelocity().Size() > 10.f)
+    {
+        // Спринтуем и реально движемся — тратим стамину, реген выключен
+        Stamina = FMath::Clamp(Stamina - SprintStaminaCost * DeltaTime, 0.f, MaxStamina);
+        if (Stamina <= 0.f)
+        {
+            StopSprint();   // стамина кончилась — падаем на обычный бег
+        }
+    }
+    else if (CombatState == ECombatState::Idle)
     {
         Stamina = FMath::Clamp(Stamina + StaminaRegenPerSecond * DeltaTime, 0.f, MaxStamina);
     }
