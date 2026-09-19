@@ -186,15 +186,24 @@ void AMyCharacter::StopBlock()
 
 void AMyCharacter::Dodge()
 {
-    // Катиться можно только стоя/на бегу и при наличии стамины
-    if (CombatState != ECombatState::Idle || Stamina < DodgeStaminaCost)
-       
+    // Катиться можно из покоя ИЛИ из атаки (отмена атаки в перекат), при наличии стамины
+    if ((CombatState != ECombatState::Idle && CombatState != ECombatState::Attacking)
+        || Stamina < DodgeStaminaCost)
     {
         return;
     }
-    StartIFrames();
+
+    // Если катимся из атаки — оборвать её: остановить монтаж, сбросить таймер, закрыть окно удара
+    if (CombatState == ECombatState::Attacking)
+    {
+        StopAnimMontage(AttackMontage);
+        GetWorldTimerManager().ClearTimer(AttackTimerHandle);
+        bHitWindowOpen = false;
+    }
+
     CombatState = ECombatState::Dodging;
     Stamina -= DodgeStaminaCost;
+    StartIFrames();
 
     // Направление переката: куда жмёшь WASD, а если стоишь — назад
     FVector DodgeDir = GetLastMovementInputVector();
@@ -204,13 +213,9 @@ void AMyCharacter::Dodge()
     }
     DodgeDir.Normalize();
 
-    // Развернуть персонажа лицом в сторону переката
     SetActorRotation(DodgeDir.Rotation());
-
-    // Придать импульс переката
     LaunchCharacter(DodgeDir * DodgeImpulse, true, false);
 
-    // Проиграть анимацию, длительность состояния = длина монтажа
     float Duration = PlayAnimMontage(DodgeMontage);
     if (Duration <= 0.f)
     {
