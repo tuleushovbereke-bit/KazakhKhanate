@@ -29,6 +29,7 @@ AMyCharacter::AMyCharacter()
 
     GetCharacterMovement()->bOrientRotationToMovement = true;
     GetCharacterMovement()->RotationRate = FRotator(0.f, 500.f, 0.f);
+    GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
 
     SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
     SpringArmComponent->SetupAttachment(RootComponent);
@@ -103,6 +104,8 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
         EIC->BindAction(BlockAction, ETriggerEvent::Completed, this, &AMyCharacter::StopBlock);
         EIC->BindAction(LockOnAction, ETriggerEvent::Started, this, &AMyCharacter::ToggleLockOn);
         EIC->BindAction(DodgeAction, ETriggerEvent::Started, this, &AMyCharacter::Dodge);
+        EIC->BindAction(SprintAction, ETriggerEvent::Started, this, &AMyCharacter::StartSprint);
+        EIC->BindAction(SprintAction, ETriggerEvent::Completed, this, &AMyCharacter::StopSprint);
     }
 }
 
@@ -403,4 +406,38 @@ float AMyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
     }
 
     return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+}
+
+void AMyCharacter::StartSprint()
+{
+    // Бежать можно только в покое (не в атаке/блоке/перекате) и при наличии стамины
+    if (CombatState != ECombatState::Idle || Stamina <= 0.f)
+    {
+        return;
+    }
+
+    bIsSprinting = true;
+    GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+}
+
+void AMyCharacter::StopSprint()
+{
+    bIsWalking = false;
+    bIsSprinting = true;
+    GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
+}
+
+void AMyCharacter::StartWalk()
+{
+    if (CombatState != ECombatState::Idle) return;
+
+    bIsWalking = true;
+    bIsSprinting = false;   // шаг отменяет спринт
+    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+}
+
+void AMyCharacter::StopWalk()
+{
+    bIsWalking = false;
+    GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
 }

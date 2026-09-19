@@ -51,11 +51,14 @@ public:
 
     void StopAttack();
     void StopBlock();
-
     void Dodge();
     void StopDodge();
     void StartIFrames();
     void StopIFrames();
+    void StartSprint();
+    void StopSprint();
+    void StartWalk();
+    void StopWalk();
 
     UFUNCTION(BlueprintPure, Category = "Combat")
     ECombatState GetCombatState() const { return CombatState; }
@@ -90,6 +93,12 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
     UInputAction* DodgeAction;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UInputAction* SprintAction;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UInputAction* WalkAction;
 
 
     void Move(const FInputActionValue& Value);
@@ -127,7 +136,19 @@ protected:
     float AttackDuration = 0.6f;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")   // <
-        float BlockWalkSpeed = 200.f;                                          // <
+    float BlockWalkSpeed = 200.f;       
+    
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+    float WalkSpeed = 150.f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+    float RunSpeed = 350.f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+    float SprintSpeed = 600.f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+    float SprintStaminaCost = 8.f;
 
 private:
 
@@ -139,6 +160,8 @@ private:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
     bool bIsInvincible = false;
+    bool bIsSprinting = false;
+    bool bIsWalking = false;
 
     FTimerHandle DodgeTimerHandle;
     FTimerHandle IFrameTimerHandle;
