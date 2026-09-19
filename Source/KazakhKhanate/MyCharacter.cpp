@@ -422,14 +422,14 @@ void AMyCharacter::StartSprint()
 
 void AMyCharacter::StopSprint()
 {
-    bIsWalking = false;
-    bIsSprinting = true;
+    bIsSprinting = false;
     GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
 }
 
 void AMyCharacter::StartWalk()
 {
     if (CombatState != ECombatState::Idle) return;
+    if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("WALK START"));
 
     bIsWalking = true;
     bIsSprinting = false;   // шаг отменяет спринт
@@ -438,6 +438,7 @@ void AMyCharacter::StartWalk()
 
 void AMyCharacter::StopWalk()
 {
+    if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, TEXT("WALK STOP"));
     bIsWalking = false;
     GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
 }
