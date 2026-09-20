@@ -91,3 +91,6 @@ Idle не дышал, пока не включил Loop в двух местах
 
 ## 2026-09-20 (утро)
 «Жігіт: idle+walk через Blend Space, граф скорости собран; осталось reparent на AEnemyBase».
+
+## 2026-09-20 (ночь)
+Жигит: полный боевой цикл. Reparent на AEnemyBase, idle+walk через Blend Space, атака с уроном через HitWindow-нотифай, смерть-рэгдолл без отлёта, спавн из очага без дублей (очистка по AEnemyBase). Auto Possess AI = Placed or Spawned.

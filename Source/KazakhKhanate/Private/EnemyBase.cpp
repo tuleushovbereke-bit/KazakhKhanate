@@ -38,10 +38,26 @@ void AEnemyBase::OnDeath()
 {
     Super::OnDeath();
 
+    // Остановить таймеры преследования и атаки
+    GetWorldTimerManager().ClearTimer(MoveTimerHandle);
+    GetWorldTimerManager().ClearTimer(AttackTimerHandle);
+
+    // Остановить ИИ и отвязать контроллер
+    if (AAIController* AI = Cast<AAIController>(GetController()))
+    {
+        AI->StopMovement();
+        AI->UnPossess();
+    }
+
+    // Погасить накопленную скорость до включения физики
+    GetCharacterMovement()->StopMovementImmediately();
+
+    // Рэгдолл
     GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
     GetMesh()->SetSimulatePhysics(true);
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     GetCharacterMovement()->DisableMovement();
+
     SetLifeSpan(3.f);
 }
 
