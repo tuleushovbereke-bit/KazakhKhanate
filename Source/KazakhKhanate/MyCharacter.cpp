@@ -118,6 +118,8 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
         EIC->BindAction(SprintAction, ETriggerEvent::Completed, this, &AMyCharacter::StopSprint);
         EIC->BindAction(WalkAction, ETriggerEvent::Started, this, &AMyCharacter::StartWalk);
         EIC->BindAction(WalkAction, ETriggerEvent::Completed, this, &AMyCharacter::StopWalk);
+        // E нажата -> вызвать Interact. Started = один раз в момент нажатия, а не каждый кадр.
+        EIC->BindAction(InteractAction, ETriggerEvent::Started, this, &AMyCharacter::Interact);
     }
 }
 
@@ -338,24 +340,22 @@ void AMyCharacter::OnDeath()
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     GetCharacterMovement()->DisableMovement();
 
-    // Через 3 секунды — возрождение
+    // Через 3 секунды возрождение. Теперь на своём таймере.
     GetWorldTimerManager().SetTimer(
-        AttackTimerHandle, this, &AMyCharacter::Respawn, 3.f, false);
+        RespawnTimerHandle, this, &AMyCharacter::Respawn, 3.f, false);
 }
 
 void AMyCharacter::Respawn()
 {
-    // 1. Вернуть здоровье и стамину
-    Health = MaxHealth;
-    Stamina = MaxStamina;
+    // 1. Выходим из любого боевого состояния
     CombatState = ECombatState::Idle;
 
-    // 2. Выйти из рэгдолла: выключить физику меша
+    // 2. Выход из рэгдолла: выключаем физику меша, оставляем только "видимость" для трассировок
     GetMesh()->SetSimulatePhysics(false);
     GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
-    // 3. Вернуть меш в стойку относительно капсулы.
-    //    Заводское смещение меша берём из CDO — эталонного экземпляра класса.
+    // 3. Возвращаем меш в стойку относительно капсулы.
+    //    CDO (Class Default Object) — эталонный экземпляр класса, в нём хранится заводское смещение меша.
     const ACharacter* Default = GetClass()->GetDefaultObject<ACharacter>();
     GetMesh()->AttachToComponent(
         GetCapsuleComponent(),
@@ -364,40 +364,28 @@ void AMyCharacter::Respawn()
         Default->GetMesh()->GetRelativeLocation(),
         Default->GetMesh()->GetRelativeRotation());
 
-    // 4. Вернуть капсуле коллизию и движение
+    // 4. Капсуле возвращаем коллизию, персонажу ходьбу
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 
-    
-
-    // 5. Найти очаг по тегу и телепортировать к нему
-    TArray<AActor*> FoundOchags;
-    UGameplayStatics::GetAllActorsWithTag(this, FName("Ochag"), FoundOchags);
-    if (FoundOchags.Num() > 0)
+    // 5. Ищем очаг и телепортируемся к нему
+    AActor* Ochag = FindNearestOchag();
+    if (Ochag)                                              // если очаг нашёлся (указатель не пустой)
     {
-        const FRotator OchagYaw(0.f, FoundOchags[0]->GetActorRotation().Yaw, 0.f);
-        SetActorLocationAndRotation(FoundOchags[0]->GetActorLocation(), OchagYaw);
-        if (AController* C = GetController())
+        // Берём только поворот вокруг вертикали (Yaw), чтобы игрок не встал наклонённым
+        const FRotator OchagYaw(0.f, Ochag->GetActorRotation().Yaw, 0.f);
+        SetActorLocationAndRotation(Ochag->GetActorLocation(), OchagYaw);
+
+        if (AController* C = GetController())              // камеру тоже разворачиваем как очаг
         {
             C->SetControlRotation(OchagYaw);
-           
         }
+    }
 
-        // 5b. Сброс врагов
-        TArray<AActor*> OldEnemies;
-        UGameplayStatics::GetAllActorsWithTag(this, FName("Enemy"), OldEnemies);
-        for (AActor* Enemy : OldEnemies)
-        {
-            Enemy->Destroy();
-        }
+    // 6. Отдых: HP, стамина, враги. Вне if, чтобы HP восстановилось даже без очага на уровне.
+    RestAtOchag(Ochag);
 
-        if (UFunction* SpawnFunc = FoundOchags[0]->FindFunction(FName("SpawnEnemies")))
-        {
-            FoundOchags[0]->ProcessEvent(SpawnFunc, nullptr);
-        }
-    }                                          // ← ВОТ ЭТОЙ скобки не хватает (закрывает блок 5)
-
-    // 6. Вернуть ввод
+    // 7. Возвращаем управление
     if (APlayerController* PC = Cast<APlayerController>(GetController()))
     {
         EnableInput(PC);
@@ -453,4 +441,56 @@ void AMyCharacter::StopWalk()
     if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, TEXT("WALK STOP"));
     bIsWalking = false;
     GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
+}
+
+AActor* AMyCharacter::FindNearestOchag() const
+{
+    TArray<AActor*> Ochags;                                   // пустой список, движок его заполнит
+    UGameplayStatics::GetAllActorsWithTag(this, FName("Ochag"), Ochags);
+
+    AActor* Nearest = nullptr;                                // лучший кандидат, пока никого
+    float NearestDist = TNumericLimits<float>::Max();         // стартовое расстояние "бесконечность"
+
+    for (AActor* Ochag : Ochags)                              // перебираем каждый найденный очаг
+    {
+        const float Dist = FVector::Dist(GetActorLocation(), Ochag->GetActorLocation());
+        if (Dist < NearestDist)                               // этот ближе лучшего на данный момент?
+        {
+            NearestDist = Dist;                               // запоминаем новое лучшее расстояние
+            Nearest = Ochag;                                  // и сам очаг
+        }
+    }
+    return Nearest;                                           // nullptr, если очагов нет вообще
+}
+
+void AMyCharacter::Interact()
+{
+    if (CombatState != ECombatState::Idle) return;            // в атаке, блоке или перекате не отдыхаем
+
+    AActor* Ochag = FindNearestOchag();
+    if (!Ochag) return;                                       // очагов на уровне нет, выходим
+
+    const float Dist = FVector::Dist(GetActorLocation(), Ochag->GetActorLocation());
+    if (Dist > InteractRange) return;                         // очаг есть, но далеко
+
+    RestAtOchag(Ochag);                                       // все проверки пройдены, отдыхаем
+}
+
+void AMyCharacter::RestAtOchag(AActor* Ochag)
+{
+    Health = MaxHealth;                                       // полное здоровье
+    Stamina = MaxStamina;                                     // полная стамина
+
+    if (!Ochag) return;                                       // без очага некому возрождать врагов
+
+    // Вызываем блюпринтовое событие SpawnEnemies по имени
+    if (UFunction* SpawnFunc = Ochag->FindFunction(FName("SpawnEnemies")))
+    {
+        Ochag->ProcessEvent(SpawnFunc, nullptr);              // nullptr = у события нет параметров
+    }
+
+    if (GEngine)                                              // отладочная надпись, чтобы видеть, что сработало
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, TEXT("Rested at Ochag"));
+    }
 }

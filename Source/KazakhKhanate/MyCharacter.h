@@ -100,6 +100,10 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
     UInputAction* WalkAction;
 
+    // Кнопка взаимодействия (E). Сам ассет IA_Interact назначим в BP_MyCharacter.
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+    UInputAction* InteractAction;
+
 
     void Move(const FInputActionValue& Value);
     void Look(const FInputActionValue& Value);
@@ -150,6 +154,10 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
     float SprintStaminaCost = 8.f;
 
+    // Как близко надо подойти к очагу, чтобы E сработала (в сантиметрах UE).
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ochag")
+    float InteractRange = 250.f;
+
 private:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -184,7 +192,11 @@ private:
     float DefaultWalkSpeed = 600.f;   // <<<  запоминаем в BeginPlay, чтобы вернуть после блока
 
     FTimerHandle AttackTimerHandle;
+    FTimerHandle RespawnTimerHandle;   // свой таймер для возрождения, чтобы не делить его с атакой
 
     void DrawDebugState() const;
     void Respawn();
+    void Interact();                          // вызывается кнопкой E
+    void RestAtOchag(AActor* Ochag);          // отдых: HP, стамина, возрождение врагов
+    AActor* FindNearestOchag() const;         // ищет ближайший очаг, персонажа не меняет
 };
